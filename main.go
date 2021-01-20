@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/Masterminds/sprig/v3"
 	"github.com/gobuffalo/packr/v2"
@@ -19,7 +21,7 @@ type Stat struct {
 	RespAvg       float64 `csv:"Average Response Time"`
 	RespMin       float64 `csv:"Min Response Time"`
 	RespMax       float64 `csv:"Max Response Time"`
-	RateRequest   float64 `csv:"Requests/s"`
+	RateReq       float64 `csv:"Requests/s"`
 	RateFail      float64 `csv:"Failures/s"`
 	Percentile50  float64 `csv:"50%"`
 	Percentile75  float64 `csv:"75%"`
@@ -29,11 +31,23 @@ type Stat struct {
 	Percentile100 float64 `csv:"100%"`
 }
 
+type HistoryRow struct {
+	Timestamp    string `csv:"Timestamp"`
+	TimeFormated string `csv:"-"`
+	UserCount    string `csv:"User Count"`
+	Type         string `csv:"Type"`
+	Name         string `csv:"Name"`
+	RateReq      string `csv:"Requests/s"`
+	RateFail     string `csv:"Failures/s"`
+	RespAvg      string `csv:"Total Average Response Time"`
+}
+
 // TemplateData is our main data struct we populate from the CSVs
 type TemplateData struct {
 	Title           string
 	Stats           []*Stat
 	AggregatedStats Stat
+	HistoryData     map[string][]*HistoryRow
 }
 
 func main() {
@@ -82,6 +96,30 @@ func main() {
 		fmt.Println("💥 Stats CSV marshalling error", err)
 		os.Exit(1)
 	}
+	historyAllRows := []*HistoryRow{}
+	if err := gocsv.UnmarshalFile(historyFile, &historyAllRows); err != nil { // Load clients from file
+		fmt.Println("💥 History CSV marshalling error", err)
+		os.Exit(1)
+	}
+
+	// Make a map of history rows, keyed on combo of request type and id
+	histMap := make(map[string][]*HistoryRow)
+	for _, row := range historyAllRows {
+		// Format timestamps, easier to do this here than in the template
+		timeInt, err := strconv.ParseInt(row.Timestamp, 10, 64)
+		if err != nil {
+			continue
+		}
+		tm := time.Unix(timeInt, 0)
+		row.TimeFormated = tm.Format("15:04:05")
+
+		// Build a key from type + name (as name isn't unique)
+		key := fmt.Sprintf("%s %s", row.Type, row.Name)
+		if key == " Aggregated" {
+			key = "Aggregated"
+		}
+		histMap[key] = append(histMap[key], row)
+	}
 
 	// Open output HTML file
 	outFile, err := os.Create(os.Args[3])
@@ -90,18 +128,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Build template data for passing to template
 	templateData := TemplateData{}
 	templateData.Stats = stats
+	templateData.HistoryData = histMap
 	templateData.Title = os.Args[2]
+
+	// Pull out aggregated to make template easier
 	for _, stat := range stats {
 		if stat.Name == "Aggregated" {
 			templateData.AggregatedStats = *stat
 		}
 	}
 
-	//spew.Dump(templateData)
-
 	fmt.Printf("\n📜 Done! Output HTML written to: %s\n", outFile.Name())
+
 	// Render template into output fine, and that's it
 	tmpl.Execute(outFile, templateData)
 }
