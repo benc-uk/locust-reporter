@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="https://unpkg.com/purecss@2.0.3/build/pure-min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/all.css" integrity="sha384-vp86vTRFVJgpjF9jiIGPEEqYqlDwgyBgEF109VFjmqGmIY/Y4HV4d3Gp2irVfcrp" crossorigin="anonymous" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Load Test: {{ .Title }}</title>
+    <style>
+      body {
+        margin: 1rem;
+      }
+      footer,
+      footer a {
+        float: right;
+        font-size: 0.8rem;
+        color: #777;
+      }
+      .tabs {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      .tabs label {
+        order: 1;
+        display: block;
+        padding: 1rem 2rem;
+        margin-right: 0.2rem;
+        cursor: pointer;
+        color: #666;
+        background: #ddd;
+        font-weight: bold;
+        font-size: 1.2rem;
+        flex: 1 1;
+        transition: background ease 0.2s;
+        border-top-left-radius: 0.3rem;
+        border-top-right-radius: 0.3rem;
+        border-color: #ccc;
+        border-style: solid;
+        border-width: 2px 2px 0px;
+        box-shadow: inset 0px -3px 7px -1px rgba(0, 0, 0, 0.33);
+      }
+      .tabs .tab {
+        order: 99;
+        flex-grow: 1;
+        width: 100%;
+        display: none;
+        padding: 1rem;
+        background: #fff;
+      }
+      .tabs input[type="radio"] {
+        display: none;
+      }
+      .tabs input[type="radio"]:checked + label {
+        background: #fff;
+        box-shadow: none;
+        color: #000;
+      }
+      .tabs input[type="radio"]:checked + label + .tab {
+        display: block;
+      }
+      .red { background-color: rgb(231, 143, 143) !important;}
+    </style>
+  </head>
+  <body>
+    <h1>🦗 Locust Load Test: {{ .Title }}</h1>
+    <div class="tabs">
+      <!-- tab Summary -->
+      <input type="radio" name="tabs" id="tabone" checked="checked" />
+      <label for="tabone"><i class="fas fa-clipboard-list"></i> &nbsp; Summary</label>
+      <div class="tab">
+        <table class="pure-table pure-table-striped">
+          <thead>
+              <tr>
+                <th>Type</th>
+                <th>Name</th>
+                <th>Requests</th>
+                <th>Failures</th>
+                <th>Requests/sec</th>
+                <th>Failures/sec</th>                
+                <th>Resp Med (ms)</th>
+                <th>Resp Avg (ms)</th>
+                <th>Resp Max (ms)</th>
+              </tr>
+          </thead>
+          <tbody>
+            {{ range .Stats }}
+            {{ if ne .Name "Aggregated"}}
+              <tr class="{{ if gt .CountFail 0 }}red{{ end }}">
+                <td>{{ .Type }}</td>
+                <td>{{ .Name }}</td>
+                <td>{{ .CountReq }}</td>
+                <td>{{ .CountFail }}</td>
+                <td>{{ round .RateRequest 2 }}</td>
+                <td>{{ round .RateFail 2 }}</td>                
+                <td>{{ round .RespMedian 2 }}</td>
+                <td>{{ round .RespAvg 2 }}</td>
+                <td>{{ round .RespMax 2 }}</td>
+              </tr>
+            {{ end }}
+            {{ end }}
+          </tbody>
+      </table>
+
+      </div>
+
+      <!-- tab History -->
+      <input type="radio" name="tabs" id="tabtwo" />
+      <label for="tabtwo"><i class="fas fa-chart-line"></i> &nbsp; Charts</label>
+      <div class="tab">CHART HERE</div>
+    </div>
+    <footer>
+      <a href="https://github.com/benc-uk/locust-reporter">Locust Report Converter: Ben Coleman, 2020</a>
+    </footer>
+  </body>
+</html>
