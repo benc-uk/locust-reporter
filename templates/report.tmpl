@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/all.css" integrity="sha384-vp86vTRFVJgpjF9jiIGPEEqYqlDwgyBgEF109VFjmqGmIY/Y4HV4d3Gp2irVfcrp" crossorigin="anonymous" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="https://raw.githubusercontent.com/benc-uk/locust-reporter/main/assets/icon.png" type="image/png">
     <title>Load Test: {{ .Title }}</title>
     <style>
       body {
@@ -59,17 +60,65 @@
       .tabs input[type="radio"]:checked + label + .tab {
         display: block;
       }
-      .red { background-color: rgb(231, 143, 143) !important;}
+      .red { 
+        background-color: rgb(231, 143, 143) !important;
+      }
+      .wide {
+        width: 100%
+      }
+      .flexrow {
+        display: flex;
+      }
+      .box {
+        flex: 1 1;
+        border-radius: 0.3rem;
+        background-color: #1054d4;
+        margin: 1rem;
+        padding: 0.5rem;
+        box-shadow: 0px 3px 5px -1px rgba(0,0,0,0.49);
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+      }
+      .boxtitle {
+        color: white;
+        font-size: 2.5vw; 
+      }
+      .boxnum {
+        color: white;
+        font-size: 4.5vw; 
+      }
     </style>
   </head>
   <body>
     <h1>🦗 Locust Load Test: {{ .Title }}</h1>
+
+    <!-- row of aggregated data  -->
+    <div class="flexrow">
+      <div class="box">
+        <div class="boxtitle">Total Requests</div>
+        <div class="boxnum">{{ .AggregatedStats.CountReq }}</div>
+      </div>
+      <div class="box">
+        <div class="boxtitle">Total Failures</div>
+        <div class="boxnum">{{ .AggregatedStats.CountFail }}</div>
+      </div>
+      <div class="box">
+        <div class="boxtitle">Request Rate</div>
+        <div class="boxnum">{{ round .AggregatedStats.RateRequest 2 }}</div>
+      </div>
+      <div class="box">
+        <div class="boxtitle">Response Time</div>
+        <div class="boxnum">{{ round .AggregatedStats.RespMedian 2 }}</div>
+      </div>            
+    </div>
+
     <div class="tabs">
-      <!-- tab Summary -->
+      <!-- tab summary -->
       <input type="radio" name="tabs" id="tabone" checked="checked" />
       <label for="tabone"><i class="fas fa-clipboard-list"></i> &nbsp; Summary</label>
       <div class="tab">
-        <table class="pure-table pure-table-striped">
+        <table class="pure-table pure-table-striped wide">
           <thead>
               <tr>
                 <th>Type</th>
@@ -81,33 +130,44 @@
                 <th>Resp Med (ms)</th>
                 <th>Resp Avg (ms)</th>
                 <th>Resp Max (ms)</th>
+                <th>Resp 90%</th>
+                <th>Resp 95%</th>
+                <th>Resp 99%</th>                
               </tr>
           </thead>
           <tbody>
             {{ range .Stats }}
-            {{ if ne .Name "Aggregated"}}
-              <tr class="{{ if gt .CountFail 0 }}red{{ end }}">
-                <td>{{ .Type }}</td>
-                <td>{{ .Name }}</td>
-                <td>{{ .CountReq }}</td>
-                <td>{{ .CountFail }}</td>
-                <td>{{ round .RateRequest 2 }}</td>
-                <td>{{ round .RateFail 2 }}</td>                
-                <td>{{ round .RespMedian 2 }}</td>
-                <td>{{ round .RespAvg 2 }}</td>
-                <td>{{ round .RespMax 2 }}</td>
-              </tr>
-            {{ end }}
+              {{ if ne .Name "Aggregated"}}
+                <tr class="{{ if gt .CountFail 0 }}red{{ end }}">
+                  <td>{{ .Type }}</td>
+                  <td>{{ .Name }}</td>
+                  <td>{{ .CountReq }}</td>
+                  <td>{{ .CountFail }}</td>
+                  <td>{{ round .RateRequest 2 }}</td>
+                  <td>{{ round .RateFail 2 }}</td>                
+                  <td>{{ round .RespMedian 2 }}</td>
+                  <td>{{ round .RespAvg 2 }}</td>
+                  <td>{{ round .RespMax 2 }}</td>
+                  <td>{{ round .Percentile90 2 }}</td>
+                  <td>{{ round .Percentile95 2 }}</td>
+                  <td>{{ round .Percentile99 2 }}</td>                  
+                </tr>
+              {{ end }}
             {{ end }}
           </tbody>
-      </table>
+        </table>
 
       </div>
 
-      <!-- tab History -->
+      <!-- tab history -->
       <input type="radio" name="tabs" id="tabtwo" />
       <label for="tabtwo"><i class="fas fa-chart-line"></i> &nbsp; Charts</label>
       <div class="tab">CHART HERE</div>
+
+      <!-- tab failures -->
+      <input type="radio" name="tabs" id="tabthree" />
+      <label for="tabthree"><i class="fas fa-bomb"></i> &nbsp; Failures</label>
+      <div class="tab">CHART HERE</div>      
     </div>
     <footer>
       <a href="https://github.com/benc-uk/locust-reporter">Locust Report Converter: Ben Coleman, 2020</a>

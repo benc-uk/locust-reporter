@@ -11,22 +11,29 @@ import (
 )
 
 type Stat struct {
-	Type        string  `csv:"Type"`
-	Name        string  `csv:"Name"`
-	CountReq    int     `csv:"Request Count"`
-	CountFail   int     `csv:"Failure Count"`
-	RespMedian  float64 `csv:"Median Response Time"`
-	RespAvg     float64 `csv:"Average Response Time"`
-	RespMin     float64 `csv:"Min Response Time"`
-	RespMax     float64 `csv:"Max Response Time"`
-	RateRequest float64 `csv:"Requests/s"`
-	RateFail    float64 `csv:"Failures/s"`
+	Type          string  `csv:"Type"`
+	Name          string  `csv:"Name"`
+	CountReq      int     `csv:"Request Count"`
+	CountFail     int     `csv:"Failure Count"`
+	RespMedian    float64 `csv:"Median Response Time"`
+	RespAvg       float64 `csv:"Average Response Time"`
+	RespMin       float64 `csv:"Min Response Time"`
+	RespMax       float64 `csv:"Max Response Time"`
+	RateRequest   float64 `csv:"Requests/s"`
+	RateFail      float64 `csv:"Failures/s"`
+	Percentile50  float64 `csv:"50%"`
+	Percentile75  float64 `csv:"75%"`
+	Percentile90  float64 `csv:"90%"`
+	Percentile95  float64 `csv:"95%"`
+	Percentile99  float64 `csv:"99%"`
+	Percentile100 float64 `csv:"100%"`
 }
 
 // TemplateData is our main data struct we populate from the CSVs
 type TemplateData struct {
-	Title string
-	Stats []*Stat
+	Title           string
+	Stats           []*Stat
+	AggregatedStats Stat
 }
 
 func main() {
@@ -71,7 +78,6 @@ func main() {
 	defer statsFile.Close()
 
 	stats := []*Stat{}
-
 	if err := gocsv.UnmarshalFile(statsFile, &stats); err != nil { // Load clients from file
 		fmt.Println("💥 Stats CSV marshalling error", err)
 		os.Exit(1)
@@ -87,6 +93,11 @@ func main() {
 	templateData := TemplateData{}
 	templateData.Stats = stats
 	templateData.Title = os.Args[2]
+	for _, stat := range stats {
+		if stat.Name == "Aggregated" {
+			templateData.AggregatedStats = *stat
+		}
+	}
 
 	//spew.Dump(templateData)
 
