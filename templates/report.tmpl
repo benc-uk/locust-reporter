@@ -106,14 +106,18 @@
     }
   </style>
   <script>
+    // Map of arrays of source data, used by charts. Key is the chart name
     const historyData = {};
     
     {{ range $key, $rowData := .HistoryData }}
       historyData['{{ $key }}'] = {
-        labels: [{{ range $rowData }} {{ .TimeFormated }}, {{ end }}],
-        respAvgs: [{{ range $rowData }} {{ .RespAvg }}, {{ end }}],
-        rateReqs: [{{ range $rowData }} {{ .RateReq }}, {{ end }}],
-        userCounts: [{{ range $rowData }} {{ .UserCount }}, {{ end }}]
+        labels:     [{{ range $rowData }}{{ .TimeFormated }},{{ end }}],
+        respAvgs:   [{{ range $rowData }}{{ .RespAvg }},{{ end }}],
+        respNinty:  [{{ range $rowData }}{{ .Percentile90 }},{{ end }}],
+        respMaxs:   [{{ range $rowData }}{{ .RespMax }},{{ end }}],
+        rateReqs:   [{{ range $rowData }}{{ .RateReq }},{{ end }}],
+        rateFails:   [{{ range $rowData }}{{ .RateFail }},{{ end }}],
+        countUsers: [{{ range $rowData }}{{ .CountUser }},{{ end }}]
       }
     {{ end }} 
   </script>
@@ -144,8 +148,8 @@
 
   <div class="tabs">
     <!-- tab summary -->
-    <input type="radio" name="tabs" id="tabone" />
-    <label for="tabone"><i class="fas fa-clipboard-list"></i> &nbsp; Summary</label>
+    <input type="radio" name="tabs" id="summary-tab" checked="checked" />
+    <label for="summary-tab"><i class="fas fa-clipboard-list"></i> &nbsp; Summary</label>
     <div class="tab">
       <table class="pure-table pure-table-striped wide">
         <thead>
@@ -166,77 +170,140 @@
         </thead>
         <tbody>
           {{ range .Stats }}
-          {{ if ne .Name "Aggregated"}}
-          <tr class="{{ if gt .CountFail 0 }}red{{ end }}">
-            <td>{{ .Type }}</td>
-            <td>{{ .Name }}</td>
-            <td>{{ .CountReq }}</td>
-            <td>{{ .CountFail }}</td>
-            <td>{{ round .RateReq 2 }}</td>
-            <td>{{ round .RateFail 2 }}</td>
-            <td>{{ round .RespMedian 2 }}</td>
-            <td>{{ round .RespAvg 2 }}</td>
-            <td>{{ round .RespMax 2 }}</td>
-            <td>{{ round .Percentile90 2 }}</td>
-            <td>{{ round .Percentile95 2 }}</td>
-            <td>{{ round .Percentile99 2 }}</td>
-          </tr>
-          {{ end }}
+            {{ if ne .Name "Aggregated"}}
+              {{ $class := "" }}
+              {{ if gt .CountFail 0 }}{{ $class = "red" }}{{ end }}
+              <tr>
+                <td class="{{ $class }}">{{ .Type }}</td>
+                <td class="{{ $class }}">{{ .Name }}</td>
+                <td class="{{ $class }}">{{ .CountReq }}</td>
+                <td class="{{ $class }}">{{ .CountFail }}</td>
+                <td class="{{ $class }}">{{ round .RateReq 2 }}</td>
+                <td class="{{ $class }}">{{ round .RateFail 2 }}</td>
+                <td class="{{ $class }}">{{ round .RespMedian 2 }}</td>
+                <td class="{{ $class }}">{{ round .RespAvg 2 }}</td>
+                <td class="{{ $class }}">{{ round .RespMax 2 }}</td>
+                <td class="{{ $class }}">{{ round .Percentile90 2 }}</td>
+                <td class="{{ $class }}">{{ round .Percentile95 2 }}</td>
+                <td class="{{ $class }}">{{ round .Percentile99 2 }}</td>
+              </tr>
+            {{ end }}
           {{ end }}
         </tbody>
       </table>
-
     </div>
 
     <!-- tab chart -->
-    <input type="radio" name="tabs" id="tabtwo" checked="checked" />
-    <label for="tabtwo"><i class="fas fa-chart-line"></i> &nbsp; Charts</label>
+    <input type="radio" name="tabs" id="charts-tab"/>
+    <label for="charts-tab"><i class="fas fa-chart-line"></i> &nbsp; Charts</label>
     <div class="tab">
+      <!-- Create a chart canvas + script for each set of history data -->
       {{ range $key, $rowData := .HistoryData }}
-        <h2>{{ $key }}</h2>
         <canvas id="chart_{{ $key }}"></canvas>
         <script>
           // Build the chart
-          new Chart(document.getElementById("chart_{{ $key }}"), {
+          new Chart(document.getElementById('chart_{{ $key }}'), {
             type: 'line',
             data: {
-              labels: historyData["{{ $key }}"].labels,
+              labels: historyData['{{ $key }}'].labels,
               datasets: [
                 {
                   label: 'Users',
-                  backgroundColor: 'rgba(20, 60, 255, 0.5)',
-                  borderColor: 'rgb(20, 60, 255)',
-                  pointRadius: 0,
-                  data: historyData["{{ $key }}"].userCounts
-                },
-                {
-                  label: 'Avg Resp Time',
-                  backgroundColor: 'rgba(20, 170, 20, 0.5)',
-                  borderColor: 'rgb(20, 170, 20)',
-                  pointRadius: 0,
-                  data: historyData["{{ $key }}"].respAvgs,
-                  borderWidth: 5
-                },
+                  backgroundColor: 'rgba(36, 138, 227, 0.5)',
+                  borderColor: 'rgb(36, 138, 227)',
+                  pointRadius: 3,
+                  pointBackgroundColor: 'rgb(36, 138, 227)',
+                  data: historyData['{{ $key }}'].countUsers,
+                  hidden: false,
+                },                         
                 {
                   label: 'Request Rate',
+                  backgroundColor: 'rgba(17, 184, 178, 0.5)',
+                  borderColor: 'rgb(17, 184, 178)',
+                  pointRadius: 3,
+                  pointBackgroundColor: 'rgb(17, 184, 178)',
+                  data: historyData['{{ $key }}'].rateReqs,
+                  hidden: true,
+                },        
+                {
+                  label: 'Failure Rate',
                   backgroundColor: 'rgba(180, 30, 30, 0.5)',
                   borderColor: 'rgb(180, 30, 30)',
-                  pointRadius: 0,
-                  data: historyData["{{ $key }}"].rateReqs
+                  pointRadius: 3,
+                  pointBackgroundColor: 'rgb(180, 30, 30)',
+                  data: historyData['{{ $key }}'].rateFails,
+                  hidden: true,
+                },                         
+                {
+                  label: 'Resp (Avg)',
+                  backgroundColor: 'rgba(20, 170, 20, 0.5)',
+                  borderColor: 'rgb(20, 170, 20)',
+                  pointRadius: 3,
+                  pointBackgroundColor: 'rgb(20, 170, 20)',
+                  data: historyData['{{ $key }}'].respAvgs,
+                  hidden: false,
                 },
+                {
+                  label: 'Resp (90%)',
+                  backgroundColor: 'rgba(97, 27, 194, 0.5)',
+                  borderColor: 'rgb(97, 27, 194)',
+                  pointRadius: 3,
+                  pointBackgroundColor: 'rgb(97, 27, 194)',
+                  data: historyData['{{ $key }}'].respNinty,
+                  hidden: true,
+                },      
+                {
+                  label: 'Resp (Max)',
+                  backgroundColor: 'rgba(194, 141, 27, 0.5)',
+                  borderColor: 'rgb(194, 141, 27)',
+                  pointRadius: 3,
+                  pointBackgroundColor: 'rgb(194, 141, 27)',
+                  data: historyData['{{ $key }}'].respMaxs,
+                  hidden: true,
+                }
               ]
             },
-            options: {}
+            options: {
+              legend: {
+                position: 'left'
+              },
+              title: {
+                display: true,
+                fontColor: '#444',
+                fontSize: 20,
+                text: '{{ $key }}'
+              }
+            }
           });
         </script>
+        <hr>
       {{ end }}
     </div>
 
     <!-- tab failures -->
-    <input type="radio" name="tabs" id="tabthree" />
-    <label for="tabthree"><i class="fas fa-bomb"></i> &nbsp; Failures</label>
+    <input type="radio" name="tabs" id="fail-tab" />
+    <label for="fail-tab"><i class="fas fa-bomb"></i> &nbsp; Failures</label>
     <div class="tab">
-      <h2>No failures</h2>
+      <table class="pure-table pure-table-striped wide">
+        <thead>
+          <tr>
+            <th>Method</th>
+            <th>Name</th>
+            <th>Error</th>
+            <th>Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{ range .Failures }}
+            <tr>
+              <td>{{ .Method }}</td>
+              <td>{{ .Name }}</td>
+              <td>{{ .Error }}</td>
+              <td>{{ .Occurrences }}</td>
+            </tr>
+          {{ end }}
+        </tbody>
+      </table>
     </div>
   </div>
   <footer>
