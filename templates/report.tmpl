@@ -115,6 +115,7 @@
         respAvgs:   [{{ range $rowData }}{{ .RespAvg }},{{ end }}],
         respNinty:  [{{ range $rowData }}{{ .Percentile90 }},{{ end }}],
         respMaxs:   [{{ range $rowData }}{{ .RespMax }},{{ end }}],
+        respMeds:   [{{ range $rowData }}{{ .RespMedian }},{{ end }}],
         rateReqs:   [{{ range $rowData }}{{ .RateReq }},{{ end }}],
         rateFails:   [{{ range $rowData }}{{ .RateFail }},{{ end }}],
         countUsers: [{{ range $rowData }}{{ .CountUser }},{{ end }}]
@@ -214,7 +215,7 @@
                   pointRadius: 3,
                   pointBackgroundColor: 'rgb(36, 138, 227)',
                   data: historyData['{{ $key }}'].countUsers,
-                  hidden: false,
+                  hidden: true,
                 },                         
                 {
                   label: 'Request Rate',
@@ -253,13 +254,13 @@
                   hidden: true,
                 },      
                 {
-                  label: 'Resp (Max)',
+                  label: 'Resp (Med)',
                   backgroundColor: 'rgba(194, 141, 27, 0.5)',
                   borderColor: 'rgb(194, 141, 27)',
                   pointRadius: 3,
                   pointBackgroundColor: 'rgb(194, 141, 27)',
-                  data: historyData['{{ $key }}'].respMaxs,
-                  hidden: true,
+                  data: historyData['{{ $key }}'].respMeds,
+                  hidden: false,
                 }
               ]
             },
