@@ -79,7 +79,7 @@ type TemplateData struct {
 
 func main() {
 	fmt.Println("\n\033[36m╔══════════════════════════════════════════════════╗")
-	fmt.Println("║    \033[33m🦗 Locust HTML Report Converter 📜\033[36m   \033[35mv1.0.1   \033[36m║")
+	fmt.Println("║    \033[33m🦗 Locust HTML Report Converter 📜\033[36m   \033[35mv1.1.0   \033[36m║")
 	fmt.Println("╚══════════════════════════════════════════════════╝\033[0m")
 
 	var inDir = flag.String("dir", ".", "Directory holding input Locust CSV files")

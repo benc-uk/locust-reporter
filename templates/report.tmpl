@@ -121,6 +121,64 @@
         countUsers: [{{ range $rowData }}{{ .CountUser }},{{ end }}]
       }
     {{ end }} 
+
+    function getDatasets(key) {
+      return [
+      {
+        label: 'Users',
+        backgroundColor: 'rgba(36, 138, 227, 0.5)',
+        borderColor: 'rgb(36, 138, 227)',
+        pointRadius: 3,
+        pointBackgroundColor: 'rgb(36, 138, 227)',
+        data: historyData[key].countUsers,
+        hidden: true,
+      },                         
+      {
+        label: 'Request Rate',
+        backgroundColor: 'rgba(17, 184, 178, 0.5)',
+        borderColor: 'rgb(17, 184, 178)',
+        pointRadius: 3,
+        pointBackgroundColor: 'rgb(17, 184, 178)',
+        data: historyData[key].rateReqs,
+        hidden: true,
+      },        
+      {
+        label: 'Failure Rate',
+        backgroundColor: 'rgba(180, 30, 30, 0.5)',
+        borderColor: 'rgb(180, 30, 30)',
+        pointRadius: 3,
+        pointBackgroundColor: 'rgb(180, 30, 30)',
+        data: historyData[key].rateFails,
+        hidden: true,
+      },                         
+      {
+        label: 'Resp (Avg)',
+        backgroundColor: 'rgba(20, 170, 20, 0.5)',
+        borderColor: 'rgb(20, 170, 20)',
+        pointRadius: 3,
+        pointBackgroundColor: 'rgb(20, 170, 20)',
+        data: historyData[key].respAvgs,
+        hidden: false,
+      },
+      {
+        label: 'Resp (90%)',
+        backgroundColor: 'rgba(97, 27, 194, 0.5)',
+        borderColor: 'rgb(97, 27, 194)',
+        pointRadius: 3,
+        pointBackgroundColor: 'rgb(97, 27, 194)',
+        data: historyData[key].respNinty,
+        hidden: true,
+      },      
+      {
+        label: 'Resp (Med)',
+        backgroundColor: 'rgba(194, 141, 27, 0.5)',
+        borderColor: 'rgb(194, 141, 27)',
+        pointRadius: 3,
+        pointBackgroundColor: 'rgb(194, 141, 27)',
+        data: historyData[key].respMeds,
+        hidden: false,
+      }];  
+    }
   </script>
 </head>
 
@@ -193,13 +251,14 @@
         </tbody>
       </table>
     </div>
-
+      
     <!-- tab chart -->
     <input type="radio" name="tabs" id="charts-tab"/>
-    <label for="charts-tab"><i class="fas fa-chart-line"></i> &nbsp; Charts</label>
+    <label for="charts-tab"><i class="fas fa-chart-line"></i> &nbsp; Request Charts</label>
     <div class="tab">
       <!-- Create a chart canvas + script for each set of history data -->
       {{ range $key, $rowData := .HistoryData }}
+      {{ if ne $key "Aggregated" }}
         <canvas id="chart_{{ $key }}"></canvas>
         <script>
           // Build the chart
@@ -207,62 +266,7 @@
             type: 'line',
             data: {
               labels: historyData['{{ $key }}'].labels,
-              datasets: [
-                {
-                  label: 'Users',
-                  backgroundColor: 'rgba(36, 138, 227, 0.5)',
-                  borderColor: 'rgb(36, 138, 227)',
-                  pointRadius: 3,
-                  pointBackgroundColor: 'rgb(36, 138, 227)',
-                  data: historyData['{{ $key }}'].countUsers,
-                  hidden: true,
-                },                         
-                {
-                  label: 'Request Rate',
-                  backgroundColor: 'rgba(17, 184, 178, 0.5)',
-                  borderColor: 'rgb(17, 184, 178)',
-                  pointRadius: 3,
-                  pointBackgroundColor: 'rgb(17, 184, 178)',
-                  data: historyData['{{ $key }}'].rateReqs,
-                  hidden: true,
-                },        
-                {
-                  label: 'Failure Rate',
-                  backgroundColor: 'rgba(180, 30, 30, 0.5)',
-                  borderColor: 'rgb(180, 30, 30)',
-                  pointRadius: 3,
-                  pointBackgroundColor: 'rgb(180, 30, 30)',
-                  data: historyData['{{ $key }}'].rateFails,
-                  hidden: true,
-                },                         
-                {
-                  label: 'Resp (Avg)',
-                  backgroundColor: 'rgba(20, 170, 20, 0.5)',
-                  borderColor: 'rgb(20, 170, 20)',
-                  pointRadius: 3,
-                  pointBackgroundColor: 'rgb(20, 170, 20)',
-                  data: historyData['{{ $key }}'].respAvgs,
-                  hidden: false,
-                },
-                {
-                  label: 'Resp (90%)',
-                  backgroundColor: 'rgba(97, 27, 194, 0.5)',
-                  borderColor: 'rgb(97, 27, 194)',
-                  pointRadius: 3,
-                  pointBackgroundColor: 'rgb(97, 27, 194)',
-                  data: historyData['{{ $key }}'].respNinty,
-                  hidden: true,
-                },      
-                {
-                  label: 'Resp (Med)',
-                  backgroundColor: 'rgba(194, 141, 27, 0.5)',
-                  borderColor: 'rgb(194, 141, 27)',
-                  pointRadius: 3,
-                  pointBackgroundColor: 'rgb(194, 141, 27)',
-                  data: historyData['{{ $key }}'].respMeds,
-                  hidden: false,
-                }
-              ]
+              datasets: getDatasets('{{ $key }}')
             },
             options: {
               legend: {
@@ -279,6 +283,76 @@
         </script>
         <hr>
       {{ end }}
+      {{ end }}
+    </div>
+
+    <!-- tab chart -->
+    <input type="radio" name="tabs" id="charts-tab-more"/>
+    <label for="charts-tab-more"><i class="fas fa-chart-bar"></i> &nbsp; Other Charts</label>
+    <div class="tab">
+      <!-- Create a chart for Aggregated data -->
+      <canvas id="chart__agg"></canvas>
+      <script>
+        new Chart(document.getElementById('chart__agg'), {
+          type: 'line',
+          data: {
+            labels: historyData['Aggregated'].labels,
+            datasets: getDatasets('Aggregated')
+          },
+          options: {
+            legend: {
+              position: 'left'
+            },
+            title: {
+              display: true,
+              fontColor: '#444',
+              fontSize: 20,
+              text: 'Aggregated Data'
+            }
+          }
+        });
+      </script>
+
+      <!-- Create a chart comparing response times -->
+      <canvas id="chart__compresp"></canvas>
+      <script>
+        // Compare resp times over all request names/types
+        let datasets = [];
+        for(let histSetKey in historyData) {
+          // Skip Aggregated set
+          if(histSetKey == 'Aggregated') continue;
+          let randomColor = Math.floor(Math.random()*16777215).toString(16);
+          datasets.push({
+            label: histSetKey,
+            backgroundColor: `#${randomColor}55`,
+            borderColor: `#${randomColor}`,
+            pointRadius: 3,
+            pointBackgroundColor: `#${randomColor}`,
+            data: historyData[histSetKey].respAvgs,
+            hidden: false,
+          });
+        };
+
+        new Chart(document.getElementById('chart__compresp'), {
+          type: 'line',
+          data: {
+            labels: historyData['Aggregated'].labels,
+            datasets: datasets
+          },
+          options: {
+            legend: {
+              position: 'left'
+            },
+            title: {
+              display: true,
+              fontColor: '#444',
+              fontSize: 20,
+              text: 'Compare Avg Response Times'
+            }
+          }
+        });
+      </script>
+      <hr>
     </div>
 
     <!-- tab failures -->
