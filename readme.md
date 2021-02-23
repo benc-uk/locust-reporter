@@ -23,22 +23,23 @@ This project uses Go templates, [Sprig](http://masterminds.github.io/sprig/) and
 Install with `go get`
 
 ```bash
-go get github.com/benc-uk/locust-reporter
+go get -u github.com/benc-uk/locust-reporter
 ```
 
-Or download a precompiled binary (Linux x64)
+Or download a pre-compiled binary (Linux x64)
 
 ```bash
-wget https://github.com/benc-uk/locust-reporter/releases/download/1.0.0/locust-reporter
+wget https://github.com/benc-uk/locust-reporter/releases/download/1.2.0/locust-reporter
 ```
 
 ## Usage
 
-The command takes three arguments:
+The command takes the following arguments:
 
 - `-dir` - The input directory, which contains the three Locust CSV files. Default is current directory.
 - `-prefix` - The prefix of the CSV files, **required parameter**
 - `-outfile` - The output HTML file, which will be created or overwritten. Default is `out.html`
+- `-failures` - Include log of failures in the report, can result in very large output. Default is `false`
 
 Example
 
@@ -46,11 +47,13 @@ Example
 ./locust-reporter -help
 
 ╔════════════════════════════════════════════════╗
-║    🦗 Locust HTML Report Converter 📜   v1.0  ║
+║   🦗 Locust HTML Report Converter 📜  v1.2.0  ║
 ╚════════════════════════════════════════════════╝
-Usage of locust-reporter:
+
   -dir string
         Directory holding input Locust CSV files (default ".")
+  -failures
+        Include failures in report, can result in very large output
   -outfile string
         Output HTML filename (default "./out.html")
   -prefix string
@@ -59,15 +62,16 @@ Usage of locust-reporter:
 
 # Building & Running
 
-Packr v2 is required to build a standalone binary
+Makefile reference
 
-```bash
-go get -u github.com/gobuffalo/packr/v2/packr2
+```txt
+build                Build binary executable, into bin directory
+clean                Clean up
+help                 This help message :)
+lint-fix             Lint & format, will try to fix errors and modify code
+lint                 Lint & format, will not fix but sets exit code on error
+run                  Run locally
 ```
-
-Then run `./scripts/build.sh`
-
-Alternatively run in place with `go run main.go`
 
 # Screenshots
 

@@ -356,6 +356,7 @@
     </div>
 
     <!-- tab failures -->
+    {{ if .Failures  }}
     <input type="radio" name="tabs" id="fail-tab" />
     <label for="fail-tab"><i class="fas fa-bomb"></i> &nbsp; Failures</label>
     <div class="tab">
@@ -380,6 +381,7 @@
         </tbody>
       </table>
     </div>
+    {{ end }}
   </div>
   <footer>
     <a href="https://github.com/benc-uk/locust-reporter">Locust Report Converter: Ben Coleman, 2020</a>

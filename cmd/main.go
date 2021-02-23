@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"encoding/csv"
 	"flag"
 	"fmt"
@@ -11,7 +12,6 @@ import (
 	"time"
 
 	"github.com/Masterminds/sprig/v3"
-	"github.com/gobuffalo/packr/v2"
 	"github.com/gocarina/gocsv"
 )
 
@@ -77,14 +77,21 @@ type TemplateData struct {
 	HistoryData     map[string][]*HistoryRow
 }
 
+var (
+	//go:embed "templates/report.tmpl"
+	templateString string
+	version        = "0.0.0" // App version number, set at build time with -ldflags "-X main.version=1.2.3"
+)
+
 func main() {
 	fmt.Println("\n\033[36m╔══════════════════════════════════════════════════╗")
-	fmt.Println("║    \033[33m🦗 Locust HTML Report Converter 📜\033[36m   \033[35mv1.1.0   \033[36m║")
+	fmt.Printf("║    \033[33m🦗 Locust HTML Report Converter 📜\033[36m   \033[35mv%s   \033[36m║\n", version)
 	fmt.Println("╚══════════════════════════════════════════════════╝\033[0m")
 
 	var inDir = flag.String("dir", ".", "Directory holding input Locust CSV files")
 	var csvPrefix = flag.String("prefix", "", "Prefix for CSV files, required")
 	var outFilename = flag.String("outfile", "./out.html", "Output HTML filename")
+	var includeFails = flag.Bool("failures", false, "Include failures in report, can result in very large output")
 	flag.Parse()
 	if *csvPrefix == "" {
 		fmt.Printf("\n🚫 CSV prefix not specified, please add -prefix\n\n")
@@ -92,14 +99,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// We package the template into the binary using packr
-	// Hopefully when Go 1.16 is release we can use an embed
-	templateBox := packr.New("Templates Box", "./templates")
-	templateString, err := templateBox.FindString("report.tmpl")
-	if err != nil {
-		fmt.Println("💥 Template unboxing error", err)
-		os.Exit(1)
-	}
 	tmpl, err := template.New("").Funcs(sprig.FuncMap()).Parse(templateString)
 	if err != nil {
 		fmt.Println("💥 Template file error", err)
@@ -136,20 +135,11 @@ func main() {
 	}
 
 	historyAllRows := []*HistoryRow{}
-	gocsv.UnmarshalFileWithErrorHandler(historyFile, func(err *csv.ParseError) bool {
+	_ = gocsv.UnmarshalFileWithErrorHandler(historyFile, func(err *csv.ParseError) bool {
 		// We need to deal with any values which are "N/A" which can be in the CSV
 		// These would normally trigger an error, we can safely ignore and value will remain as zero
-		if strings.Contains(err.Err.Error(), "parsing \"N/A\"") {
-			return true
-		}
-		return false
+		return strings.Contains(err.Err.Error(), "parsing \"N/A\"")
 	}, &historyAllRows)
-
-	failures := []*Failure{}
-	if err := gocsv.UnmarshalFile(failureFile, &failures); err != nil {
-		fmt.Println("🚽 Failure CSV marshalling error", err)
-		os.Exit(1)
-	}
 
 	// Make a map of history rows, keyed on combo of request type and id
 	histMap := make(map[string][]*HistoryRow)
@@ -182,8 +172,18 @@ func main() {
 
 	// Build template data struct for passing to template
 	templateData := TemplateData{}
+
+	// Failure data is conditional
+	if *includeFails {
+		failures := []*Failure{}
+		if err := gocsv.UnmarshalFile(failureFile, &failures); err != nil {
+			fmt.Println("🚽 Failure CSV marshalling error", err)
+			os.Exit(1)
+		}
+		templateData.Failures = failures
+	}
+
 	templateData.Stats = stats
-	templateData.Failures = failures
 	templateData.HistoryData = histMap
 	templateData.Title = *csvPrefix
 
@@ -195,6 +195,6 @@ func main() {
 	}
 
 	// Render template into output file
-	tmpl.Execute(outFile, templateData)
+	_ = tmpl.Execute(outFile, templateData)
 	fmt.Printf("\n📜 Done! Output HTML written to: %s\n", outFile.Name())
 }
