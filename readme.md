@@ -26,6 +26,8 @@ Install with `go get`
 go get -u github.com/benc-uk/locust-reporter/cmd/locust-reporter
 ```
 
+This will install the binary into `$GOPATH/bin/locust-reporter`, ensure this is in your path
+
 Or download a pre-compiled binary (Linux x64)
 
 ```bash
