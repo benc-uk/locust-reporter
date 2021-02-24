@@ -106,6 +106,8 @@
     }
   </style>
   <script>
+    const colourList = [ "#106cc7", "#8b29c4", "#60eb9a", "#ebdd60", "#eb8f57", "#3bdbe3", "#42ad5b", "#f05b5b" ]
+
     // Map of arrays of source data, used by charts. Key is the chart name
     const historyData = {};
     
@@ -318,16 +320,18 @@
       <script>
         // Compare resp times over all request names/types
         let datasets = [];
+        let set = 0
         for(let histSetKey in historyData) {
           // Skip Aggregated set
           if(histSetKey == 'Aggregated') continue;
-          let randomColor = Math.floor(Math.random()*16777215).toString(16);
+          const setColour = colourList[set % colourList.length]
+          set++;
           datasets.push({
             label: histSetKey,
-            backgroundColor: `#${randomColor}55`,
-            borderColor: `#${randomColor}`,
+            backgroundColor: `${setColour}55`,
+            borderColor: `${setColour}`,
             pointRadius: 3,
-            pointBackgroundColor: `#${randomColor}`,
+            pointBackgroundColor: `${setColour}`,
             data: historyData[histSetKey].respAvgs,
             hidden: false,
           });
