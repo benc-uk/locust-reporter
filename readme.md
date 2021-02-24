@@ -23,13 +23,13 @@ This project uses Go templates, [Sprig](http://masterminds.github.io/sprig/) and
 Install with `go get`
 
 ```bash
-go get -u github.com/benc-uk/locust-reporter
+go get -u github.com/benc-uk/locust-reporter/cmd/locust-reporter
 ```
 
 Or download a pre-compiled binary (Linux x64)
 
 ```bash
-wget https://github.com/benc-uk/locust-reporter/releases/download/1.2.0/locust-reporter
+wget https://github.com/benc-uk/locust-reporter/releases/download/v1.2.2/locust-reporter
 ```
 
 ## Usage
@@ -47,7 +47,7 @@ Example
 ./locust-reporter -help
 
 ╔════════════════════════════════════════════════╗
-║   🦗 Locust HTML Report Converter 📜  v1.2.0  ║
+║   🦗 Locust HTML Report Converter 📜  v1.2.2  ║
 ╚════════════════════════════════════════════════╝
 
   -dir string
