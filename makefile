@@ -1,5 +1,5 @@
 # Example and common variables
-VERSION := 1.2.0
+VERSION := 1.2.2
 BUILD_INFO := Manual build 
 SRC_DIR := ./cmd
 

@@ -80,7 +80,7 @@ type TemplateData struct {
 var (
 	//go:embed "templates/report.tmpl"
 	templateString string
-	version        = "0.0.0" // App version number, set at build time with -ldflags "-X main.version=1.2.3"
+	version        = "1.2.2" // App version number, set at build time with -ldflags "-X main.version=1.2.3"
 )
 
 func main() {
